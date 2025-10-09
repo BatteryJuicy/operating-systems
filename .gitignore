@@ -2,6 +2,7 @@
 *.d
 
 # Object files
+obj
 *.o
 *.ko
 *.obj
@@ -53,3 +54,9 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+#vscode files
+.vscode
+
+#rsync ignore for ssh with uni computers
+.rsync-ignore
