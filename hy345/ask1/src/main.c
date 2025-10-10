@@ -23,6 +23,9 @@ int main(){
                 else if (chdir(p->argv[1]) == -1){
                     perror("cd");
                 }
+                //going to the next command and continuing to not execute the other if-then's
+                p = p->next;
+                continue;
             }
             else if (strcmp(p->argv[0], "exit") == 0){
                 free_commands(command_list);
@@ -30,11 +33,17 @@ int main(){
             }
 
             pid_t pid = fork();
-            if (pid != 0){ //parent wait
+            if (pid > 0){ //parent wait
                 waitpid(pid, &status, 0);
             }
-            else{ //child proccess
+            else if (pid == 0) { //child proccess
                 execvp((p->argv)[0], p->argv);
+
+                perror(p->argv[0]);
+                _exit(1);  // terminate child safely
+            }
+            else{
+                perror("fork");
             }
             p=p->next; //process the next command
         }

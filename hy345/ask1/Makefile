@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Wshadow -Wconversion -Wuninitialized -O2 -I/include
-TARGET = hy345sh
+TARGET = hy345sh.out
 
 SRC_DIR = src
 INC_DIR = include

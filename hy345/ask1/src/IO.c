@@ -47,14 +47,13 @@ void append(struct cmdnode** headptr, struct cmdnode* cmd)
    The last element of the array is NULL to abide by the execvp format.
 */
 char** split_command(char* command)
-{
+{    
     char** argv = malloc(MAX_ARG_SIZE*sizeof(char*));
     if (!argv) { 
         fprintf(stderr, "cannot allocate arguments for command %s\n", command); exit(1);
     }
 
     while (*command == ' ') command++; // skipping spaces
-
     int argc = 0;
     char *arg = strtok(command, " ");
     while (arg != NULL && argc < MAX_ARG_SIZE) {
@@ -94,9 +93,9 @@ struct cmdnode* read_command()
 
     struct cmdnode* head = NULL;
 
-    printf("commands %s\n", commands);
+    char* save_strtok_ptr; //pointer to store state of strtok because the static char* gets overritten when it's called in create_node()
 
-    char* cmd = strtok(commands, ";"); // splitting commands before each ";"
+    char* cmd = __strtok_r(commands, ";", &save_strtok_ptr); // splitting commands before each ";"
     while (cmd != NULL)
     {
         char* cmd_copy = strdup(cmd);
@@ -105,11 +104,8 @@ struct cmdnode* read_command()
             exit(1);
         }
         struct cmdnode* command_node =  create_node(cmd_copy);
-        //append(&head, command_node); //creating a node with cmd as data and appending it to the list of commands
-        printf("command: %s\n", cmd);
-        cmd = strtok(NULL, ";"); // go to the next command and do the same
-
-        printf("command2: %s\n", cmd);
+        append(&head, command_node); //creating a node with cmd as data and appending it to the list of commands
+        cmd = __strtok_r(NULL, ";", &save_strtok_ptr); // go to the next command and do the same
     }
     
     free(commands);
