@@ -20,11 +20,11 @@ void type_prompt()
     printf("%s@%d-hy345sh:%s$", username, STUDENT_AM, cwd);
 }
 
-void append(struct cmdnode** headptr, struct cmdnode* cmd)
+void append(cmdnode** headptr, cmdnode* cmd)
 {
     //iterating the linked list..
-    struct cmdnode* prevp = NULL;
-    struct cmdnode* p = *headptr;
+    cmdnode* prevp = NULL;
+    cmdnode* p = *headptr;
     while(p != NULL)
     {
         prevp = p;
@@ -65,9 +65,9 @@ char** split_command(char* command)
 }
 
 //creates a node
-struct cmdnode* create_node(char* cmd)
+cmdnode* create_node(char* cmd)
 {
-    struct cmdnode* new_node = (struct cmdnode*) malloc(sizeof(struct cmdnode));
+    cmdnode* new_node = (cmdnode*) malloc(sizeof(cmdnode));
     if(new_node == NULL){
         fprintf(stderr, "cannot allocate command node");
         exit(-1);
@@ -79,7 +79,7 @@ struct cmdnode* create_node(char* cmd)
     return new_node;
 }
 
-struct cmdnode* read_command()
+cmdnode* read_command()
 {
     char *commands = NULL;
     size_t len = 0; // buffer size (gets updated by getline)
@@ -91,7 +91,7 @@ struct cmdnode* read_command()
         commands[n-1] = '\0'; //removing newline
     }
 
-    struct cmdnode* head = NULL;
+    cmdnode* head = NULL;
 
     char* save_strtok_ptr; //pointer to store state of strtok because the static char* gets overritten when it's called in create_node()
 
@@ -103,7 +103,7 @@ struct cmdnode* read_command()
             fprintf(stderr, "Couldn't allocate cmd.\n");
             exit(1);
         }
-        struct cmdnode* command_node =  create_node(cmd_copy);
+        cmdnode* command_node =  create_node(cmd_copy);
         append(&head, command_node); //creating a node with cmd as data and appending it to the list of commands
         cmd = __strtok_r(NULL, ";", &save_strtok_ptr); // go to the next command and do the same
     }
@@ -113,10 +113,10 @@ struct cmdnode* read_command()
     return head;
 }
 
-void free_commands(struct cmdnode* first)
+void free_commands(cmdnode* first)
 {
-    struct cmdnode* p = first;
-    struct cmdnode* tmp;
+    cmdnode* p = first;
+    cmdnode* tmp;
     while (p != NULL) {
         tmp = p->next;
         free(p->argv);

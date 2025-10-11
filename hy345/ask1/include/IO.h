@@ -1,3 +1,7 @@
+/*
+    LINKED LIST WITH CONST SIZE ARRAY FOR FLAGS/ARGS FOR EACH NODE IMPLEMENTS MULTIPLE COMMANDS.
+*/
+
 #ifndef IO_H
 #define IO_H
 
@@ -5,15 +9,15 @@
 #define MAX_PATH_SIZE 4096
 #define MAX_ARG_SIZE 64
 
-struct cmdnode{
+typedef struct cmdnode{
     struct cmdnode *next;
     char* line; //whole line unformatted of the whole command with flags
     char** argv; //line split into an array so execvp can read it.
-};
+}cmdnode;
 
 void type_prompt();
 
-struct cmdnode* read_command();
-void free_commands(struct cmdnode*);
+cmdnode* read_command();
+void free_commands(cmdnode*);
 
 #endif
