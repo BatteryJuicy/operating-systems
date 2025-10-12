@@ -48,7 +48,7 @@ void append(cmdnode** headptr, cmdnode* cmd)
 */
 char** split_command(char* command)
 {    
-    char** argv = malloc(MAX_ARG_SIZE*sizeof(char*));
+    char** argv = calloc(MAX_ARG_SIZE, sizeof(char*));
     if (!argv) { 
         fprintf(stderr, "cannot allocate arguments for command %s\n", command); exit(1);
     }
