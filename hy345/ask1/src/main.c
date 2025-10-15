@@ -1,17 +1,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
+//#include <sys/wait.h>
 #include <stdlib.h>
 #include <IO.h>
 #include <vars.h>
+#include <execute.h>
 
 void preprocess_variables(cmdnode* p)
 {
     for (int i = 0; p->argv[i] != NULL; i++)
     {
-        if(p->argv[i] == NULL) break;
-
         //if arg starts with $ replace the whole string with the value of the var in globals with name argv[i] + 1
         if (p->argv[i][0] == '$'){
             const char* name = p->argv[i] + 1;
@@ -34,7 +33,7 @@ void define_variable(cmdnode* p)
     }
 }
 
-int check_builin(cmdnode* p, cmdnode* command_list)
+int check_builtin(cmdnode* p, cmdnode* command_list)
 {
     //built-in: cd
     if(strcmp(p->argv[0], "cd") == 0){
@@ -55,18 +54,16 @@ int check_builin(cmdnode* p, cmdnode* command_list)
     return 0;
 }
 
-void execute_pipeline()
-{
-
-}
-
 int main(){
     int status;
+    int pipe_flag;
     while(1)
     {
+        pipe_flag = 0;
+
         type_prompt();
         
-        cmdnode* command_list = read_command(); // reads command(s) and appends each command to a SLL
+        cmdnode* command_list = read_commands(); // reads command(s) and appends each command to a SLL
 
         cmdnode* p = command_list;
         while(p != NULL){
@@ -86,7 +83,7 @@ int main(){
 
             //-------------check for builtins-------------
 
-            if (check_builin(p, command_list) == 1)
+            if (check_builtin(p, command_list) == 1)
             {
                 //going to the next command and continuing to not execute the other if-then's
                 p=p->next;
@@ -95,20 +92,16 @@ int main(){
 
             //-------------execute command-------------
 
-            pid_t pid = fork();
-            if (pid > 0){ //parent wait
-                waitpid(pid, &status, 0);
+            for (int i = 0; p->argv[i] != NULL; i++)
+            {
+                if(strchr(p->argv[i], '|') != NULL){
+                    execute_pipeline(p);
+                    pipe_flag = 1;
+                    break;
+                }
             }
-            else if (pid == 0) { //child proccess
-                execvp((p->argv)[0], p->argv);
-
-                //terminating child process in case execvp fails
-                fprintf(stderr, "%s: command not found\n", p->argv[0]);
-                _exit(127); // exiting child process without calling atexit functions of the parent possibly freeing freed memory (same code as bash)
-            }
-            else{
-                perror("fork");
-            }
+            if(pipe_flag == 0)
+                execute_command(p, &status);
 
             p=p->next; //process the next command
         }

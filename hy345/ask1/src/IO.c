@@ -79,7 +79,7 @@ cmdnode* create_node(char* cmd)
     return new_node;
 }
 
-cmdnode* read_command()
+cmdnode* read_commands()
 {
     char *commands = NULL;
     size_t len = 0; // buffer size (gets updated by getline)
@@ -95,7 +95,7 @@ cmdnode* read_command()
 
     char* save_strtok_ptr; //pointer to store state of strtok because the static char* gets overritten when it's called in create_node()
 
-    char* cmd = __strtok_r(commands, ";", &save_strtok_ptr); // splitting commands before each ";"
+    char* cmd = strtok_r(commands, ";", &save_strtok_ptr); // splitting commands before each ";"
     while (cmd != NULL)
     {
         char* cmd_copy = strdup(cmd);
@@ -105,7 +105,7 @@ cmdnode* read_command()
         }
         cmdnode* command_node =  create_node(cmd_copy);
         append(&head, command_node); //creating a node with cmd as data and appending it to the list of commands
-        cmd = __strtok_r(NULL, ";", &save_strtok_ptr); // go to the next command and do the same
+        cmd = strtok_r(NULL, ";", &save_strtok_ptr); // go to the next command and do the same
     }
     
     free(commands);

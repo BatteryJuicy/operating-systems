@@ -16,8 +16,10 @@ typedef struct cmdnode{
 }cmdnode;
 
 void type_prompt();
-
-cmdnode* read_command();
+cmdnode* read_commands();
 void free_commands(cmdnode*);
+
+cmdnode* create_node(char* cmd);
+void append(cmdnode** headptr, cmdnode* cmd);
 
 #endif
