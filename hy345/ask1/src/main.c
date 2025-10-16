@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-//#include <sys/wait.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <IO.h>
 #include <vars.h>
 #include <execute.h>
@@ -25,6 +25,19 @@ void define_variable(cmdnode* p)
     //split cmd between =
     const char* name = strtok((p->argv[0]), "=");
     char* value = strtok(NULL, " ");
+    
+    char* nameptr = (char*)name;
+    if (!isalpha(*nameptr)){
+        fprintf(stderr, "%s: Invalid variable name", name);
+        return;
+    }
+    while (*(++nameptr) != '\0')
+    {
+        if (!isalpha(*nameptr) && !isdigit(*nameptr)){
+            fprintf(stderr, "%s: Invalid variable name\n", name);
+            return;
+        }
+    }
 
     if (value != NULL)
     {
