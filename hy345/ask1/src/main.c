@@ -64,6 +64,18 @@ int check_builtin(cmdnode* p, cmdnode* command_list)
         free_table();
         exit(0);   
     }
+    //built-in: export
+    else if (strcmp(p->argv[0], "export") == 0){
+        const char* name = p->argv[1];
+        char* value = get_var(name);
+        if(value == NULL){
+            fprintf(stderr, "export: variable '%s' not found\n", name);
+            return 1;
+        }
+        if (setenv(name, value, 1) != 0)
+            perror("export");
+        return 1;
+    }
     return 0;
 }
 
@@ -93,6 +105,10 @@ int main(){
                 p=p->next;
                 continue;
             }
+
+            //-------------check for I/O redirection-------------
+
+
 
             //-------------check for builtins-------------
 
