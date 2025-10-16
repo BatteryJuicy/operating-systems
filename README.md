@@ -9,7 +9,7 @@ To build and run each assignment:
     ```bash
     make -version
     ```
-2. Move to the directory where the `Makefile` is located.
+2. In the terminal, move to the directory of the wanted assignment and find the `Makefile` file.
 
 3. run the command
     ```bash
@@ -28,3 +28,4 @@ To delete the files make created run
    ```bash
    make clean
    ```
+
