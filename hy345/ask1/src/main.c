@@ -11,13 +11,17 @@ void preprocess_variables(cmdnode* p)
 {
     for (int i = 0; p->argv[i] != NULL; i++)
     {
+        int ampersand_flag = 0;
+
         //if arg starts with $ replace the whole string with the value of the var in globals with name argv[i] + 1
         char new_arg[1024] = {0};
         int j = 0;
         while (p->argv[i][j] != '\0'){
             if (p->argv[i][j] == '$'){
+                ampersand_flag = 1;
                 const char* name = &(p->argv[i][j+1]); //start after $
- 
+                char* value;
+
                 //replace next $ with \0 so get_var doesn't read the rest of the string
                 int EOF_flag = 1;
                 int k;
@@ -29,16 +33,19 @@ void preprocess_variables(cmdnode* p)
                         break;
                     }
                 }
-                
-                char* value = get_var(name);
+                //check if variable is environment var else check if it's defined in this process
+                if ((value = getenv(name)) == 0)
+                    value = get_var(name);
+
                 if (!EOF_flag)
                     p->argv[i][k] = '$'; //restore string for the next repetition
 
-                strcat(new_arg, value); // concatinate the new value
+                if (value != NULL)
+                    strcat(new_arg, value); // concatinate the new value
             }
             j++;
         }
-        if (new_arg[0] != '\0')
+        if (ampersand_flag)
             p->argv[i] = strdup(new_arg); //replace old string with substituted version. Memory leak but don't have time to fix
     }
 }
@@ -114,7 +121,7 @@ int check_builtin(cmdnode* p, cmdnode* command_list)
             perror("export");
         return 1;
     }
-    return 0; //flag to continue the procesing of this command
+    return 0; //flag to continue the procesing of this command (not buiilt-int command)
 }
 
 int main(){
