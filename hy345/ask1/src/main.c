@@ -12,11 +12,34 @@ void preprocess_variables(cmdnode* p)
     for (int i = 0; p->argv[i] != NULL; i++)
     {
         //if arg starts with $ replace the whole string with the value of the var in globals with name argv[i] + 1
-        if (p->argv[i][0] == '$'){
-            const char* name = p->argv[i] + 1;
-            char* value = get_var(name);
-            p->argv[i] = value; // replace with var value or NULL if var doesn't exist
-        }    
+        char new_arg[1024] = {0};
+        int j = 0;
+        while (p->argv[i][j] != '\0'){
+            if (p->argv[i][j] == '$'){
+                const char* name = &(p->argv[i][j+1]); //start after $
+ 
+                //replace next $ with \0 so get_var doesn't read the rest of the string
+                int EOF_flag = 1;
+                int k;
+                for (k = j+1; p->argv[i][k] != '\0'; k++)
+                {
+                    if(p->argv[i][k] == '$'){
+                        p->argv[i][k] = '\0';
+                        EOF_flag = 0;
+                        break;
+                    }
+                }
+                
+                char* value = get_var(name);
+                if (!EOF_flag)
+                    p->argv[i][k] = '$'; //restore string for the next repetition
+
+                strcat(new_arg, value); // concatinate the new value
+            }
+            j++;
+        }
+        if (new_arg[0] != '\0')
+            p->argv[i] = strdup(new_arg); //replace old string with substituted version. Memory leak but don't have time to fix
     }
 }
 
@@ -41,6 +64,21 @@ void define_variable(cmdnode* p)
 
     if (value != NULL)
     {
+        if (value[0] == '\"'){
+            value = &value[1];
+
+            int i = 0;
+            while (value[i] != '\"') i++;
+            if(value[i] != '\"'){
+                fprintf(stderr, "Invalid variable delcaration\n");
+                return;
+            }
+            else{
+                value[i] = '\0';
+            }
+            
+        }
+
         //create/overrite variable
         set_var(name, value);
     }
