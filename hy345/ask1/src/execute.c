@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +14,10 @@ void execute_command(cmdnode* p, int* status)
         waitpid(pid, status, 0);
     }
     else if (pid == 0) { //child proccess
+
+        //check for I/O redirection
+        redirect_io(p);
+
         execvp((p->argv)[0], p->argv);
 
         //terminating child process in case execvp fails
@@ -35,7 +40,6 @@ cmdnode* reprocess_commands(cmdnode* p)
             
         p->argv[i][j] = ' '; //e.g. line: echo\0test|\0grep\0te ---> echo test| grep te
     }
-    
     cmdnode* head = NULL;
 
     char* save_strtok_ptr; //pointer to store state of strtok because the static char* gets overritten when it's called in create_node()
@@ -60,10 +64,11 @@ void execute_pipeline(cmdnode* p)
     cmdnode* pipelist = reprocess_commands(p); // adding the pipeline commands to the list (each node is 1 command)
 
     int cmd_sum = 0;
-    for (cmdnode* q = pipelist; q != NULL; q=q->next){        
+    for (cmdnode* q = pipelist; q != NULL; q=q->next){
         cmd_sum++;
     }
-    printf("cmdsum %d\n", cmd_sum);
+
+    if (cmd_sum < 2){fprintf(stderr, "fewer than 2 pipeline commands: %d\n", cmd_sum);exit(1);}
     int pipes[cmd_sum-1][2];
 
     //create pipes
@@ -86,6 +91,10 @@ void execute_pipeline(cmdnode* p)
         }
         if(pid == 0) //child proccess
         {
+            if (cmd_index == 0 || cmd_index == cmd_sum - 1){ //first command or last command redirect io
+                redirect_io(q);
+            }
+
             if (cmd_index > 0){ //not first command redirect stdin to previous command out
                 dup2(pipes[cmd_index-1][0],STDIN_FILENO);
             }
@@ -99,7 +108,7 @@ void execute_pipeline(cmdnode* p)
                 close(pipes[i][0]);
                 close(pipes[i][1]);
             }
-
+            
             execvp(q->argv[0], q->argv);
             perror(q->argv[0]);
             exit(1);
@@ -118,4 +127,68 @@ void execute_pipeline(cmdnode* p)
     }
     
     free_commands(pipelist);
+}
+
+int redirect_io(cmdnode* p)
+{
+    int fd;
+    for (int i = 0; p->argv[i] != NULL; i++)
+    {
+        if (strcmp(p->argv[i], "<") == 0) { // input redirection
+            if (p->argv[i+1] == NULL) {
+                fprintf(stderr, "Error: no input file specified\n");
+                return -1;
+            }
+            fd = open(p->argv[i+1], O_RDONLY);
+            if (fd == -1) {
+                perror("open");
+                return -1;
+            }
+            dup2(fd, STDIN_FILENO); // redirect stdin
+            close(fd);
+
+            //remove the redirection from argv so execvp works
+            for (int j = i; p->argv[j-1] != NULL; j++) {
+                p->argv[j] = p->argv[j+2];
+            }
+            i--; // adjust index
+        }
+        else if (strcmp(p->argv[i], ">") == 0) { // output redirection (truncate)
+            if (p->argv[i+1] == NULL) {
+                fprintf(stderr, "Error: no output file specified\n");
+                return -1;
+            }
+            fd = open(p->argv[i+1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd == -1) {
+                perror("open");
+                return -1;
+            }
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+
+            for (int j = i; p->argv[j-1] != NULL; j++) {
+                p->argv[j] = p->argv[j+2];
+            }
+            i--;
+        }
+        else if (strcmp(p->argv[i], ">>") == 0) { // output redirection (append)
+            if (p->argv[i+1] == NULL) {
+                fprintf(stderr, "Error: no output file specified\n");
+                return -1;
+            }
+            fd = open(p->argv[i+1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+            if (fd == -1) {
+                perror("open");
+                return -1;
+            }
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+
+            for (int j = i; p->argv[j-1] != NULL; j++) {
+                p->argv[j] = p->argv[j+2];
+            }
+            i--;
+        }
+    }
+    return 0;
 }

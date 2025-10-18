@@ -20,6 +20,32 @@ void preprocess_variables(cmdnode* p)
     }
 }
 
+void define_variable(cmdnode* p)
+{
+    //split cmd between =
+    const char* name = strtok((p->argv[0]), "=");
+    char* value = strtok(NULL, " ");
+    
+    char* nameptr = (char*)name;
+    if (!isalpha(*nameptr)){
+        fprintf(stderr, "%s: Invalid variable name", name);
+        return;
+    }
+    while (*(++nameptr) != '\0')
+    {
+        if (!isalpha(*nameptr) && !isdigit(*nameptr)){
+            fprintf(stderr, "%s: Invalid variable name\n", name);
+            return;
+        }
+    }
+
+    if (value != NULL)
+    {
+        //create/overrite variable
+        set_var(name, value);
+    }
+}
+
 int check_builtin(cmdnode* p, cmdnode* command_list)
 {
     //built-in: cd
@@ -50,12 +76,7 @@ int check_builtin(cmdnode* p, cmdnode* command_list)
             perror("export");
         return 1;
     }
-    return 0;
-}
-
-void redirect_io()
-{
-
+    return 0; //flag to continue the procesing of this command
 }
 
 int main(){
@@ -84,10 +105,6 @@ int main(){
                 p=p->next;
                 continue;
             }
-
-            //-------------check for I/O redirection-------------
-
-
 
             //-------------check for builtins-------------
 

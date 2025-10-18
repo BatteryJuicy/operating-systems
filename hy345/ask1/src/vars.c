@@ -4,7 +4,7 @@
 #include <vars.h>
 #include <IO.h>
 
-var* globals[TABLE_SIZE] = {0};
+var* globals[TABLE_SIZE] = {0};  //init all buckets to 0/NULL
 
 unsigned long hash(const char *str) //sdbm
 {
@@ -96,32 +96,6 @@ void delete_var(const char *name)
     free((char*)p->name);
     free(p->value);
     free(p);
-}
-
-void define_variable(cmdnode* p)
-{
-    //split cmd between =
-    const char* name = strtok((p->argv[0]), "=");
-    char* value = strtok(NULL, " ");
-    
-    char* nameptr = (char*)name;
-    if (!isalpha(*nameptr)){
-        fprintf(stderr, "%s: Invalid variable name", name);
-        return;
-    }
-    while (*(++nameptr) != '\0')
-    {
-        if (!isalpha(*nameptr) && !isdigit(*nameptr)){
-            fprintf(stderr, "%s: Invalid variable name\n", name);
-            return;
-        }
-    }
-
-    if (value != NULL)
-    {
-        //create/overrite variable
-        set_var(name, value);
-    }
 }
 
 void free_table()

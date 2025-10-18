@@ -1,6 +1,6 @@
 /*
-    HASH TABLE WITH SDBM HASH FUNCTION AND SLL TO HANDLE COLLISIONS IMPLEMENTS GLOBAL VARIABLES. 
-    Reusing modified code from HY240 I wrote (https://github.com/BatteryJuicy/data-structures)
+    HASH TABLE WITH SDBM HASH FUNCTION AND SLL TO HANDLE COLLISIONS,
+    TO IMPLEMENT GLOBAL VARIABLES. EACH VAR ALLOCATES NAME AND VALUE.
 */
 
 #ifndef VARS_H
@@ -14,7 +14,7 @@ typedef struct var{
     struct var* next;
 }var;
 
-extern var* globals[TABLE_SIZE]; //init all buckets to 0/NULL
+extern var* globals[TABLE_SIZE];
 
 // create var (call strdup on name, value), append to the SLL of the appropriate globals index
 void set_var(const char *name, char *value);

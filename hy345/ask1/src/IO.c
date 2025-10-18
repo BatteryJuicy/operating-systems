@@ -50,7 +50,8 @@ char** split_command(char* command)
 {    
     char** argv = calloc(MAX_ARG_SIZE, sizeof(char*));
     if (!argv) { 
-        fprintf(stderr, "cannot allocate arguments for command %s\n", command); exit(1);
+        fprintf(stderr, "cannot allocate arguments for command %s\n", command);
+        exit(1);
     }
 
     while (*command == ' ') command++; // skipping spaces

@@ -5,5 +5,5 @@
 
 void execute_command(cmdnode*, int*);
 void execute_pipeline();
-
+int redirect_io(cmdnode* p);
 #endif
