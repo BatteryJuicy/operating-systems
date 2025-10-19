@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <IO.h>
@@ -125,6 +126,8 @@ int check_builtin(cmdnode* p, cmdnode* command_list)
 }
 
 int main(){
+    signal(SIGINT, SIG_IGN);  //ignore ctrl+c
+    
     int status;
     int pipe_flag;
     while(1)

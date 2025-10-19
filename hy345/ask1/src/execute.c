@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <signal.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -14,6 +15,9 @@ void execute_command(cmdnode* p, int* status)
         waitpid(pid, status, 0);
     }
     else if (pid == 0) { //child proccess
+
+        //restore default behavior for cntrl+c
+        signal(SIGINT, SIG_DFL);
 
         //check for I/O redirection
         redirect_io(p);
@@ -91,6 +95,9 @@ void execute_pipeline(cmdnode* p)
         }
         if(pid == 0) //child proccess
         {
+            //restore default behavior for cntrl+c
+            signal(SIGINT, SIG_DFL);
+
             if (cmd_index == 0 || cmd_index == cmd_sum - 1){ //first command or last command redirect io
                 redirect_io(q);
             }

@@ -85,6 +85,7 @@ cmdnode* read_commands()
     char *commands = NULL;
     size_t len = 0; // buffer size (gets updated by getline)
     ssize_t n = getline(&commands, &len, stdin); // reads the entire line and stores the number of chars in n
+
     if(n == -1){ // EOF probably
         return NULL;
     }
