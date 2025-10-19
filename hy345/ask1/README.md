@@ -3,9 +3,9 @@ This shell reads multiple commands and stores each command (seperated by <;>) in
   - A string of the whole command with null terminators between each argument/flag
   - an array of char* to each string above
 For each command:
-  - It **preproccesses** the command to dereference variables if <$>.
   - It looks for <=> to **define a variable**.
   - Checks and **executes built-in** command (cd, exit, export).
+  - It **preproccesses** the command just before executing the command to dereference variables if <$>.
   - If it's a **pipeline** (contains |), then it creates a _new_ linked list to seperate each command along <|>.
     (works with and without space between commands and <|>). It then _creates pipes_ and for _each child_ process, _redirects I/O_ to either a _file_
     (if it's the first or the last of the pipe according to what redirection flag was used) or the _previous_ and/or _next_ _command_ in the pipeline.
