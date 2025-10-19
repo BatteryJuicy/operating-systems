@@ -111,9 +111,13 @@ cmdnode* reprocess_commands(cmdnode* p)
 
 void execute_pipeline(cmdnode* p)
 {
-    cmdnode* pipelist = reprocess_commands(p); // adding the pipeline commands to the list (each node is 1 command)
+    cmdnode* pipelist = reprocess_commands(p); // adding the pipeline commands to the list (each node is 1 command) seperated for each <|>
 
-    preprocess_variables(p);
+    for (cmdnode* q = pipelist; q; q=q->next)
+    {
+        preprocess_variables(q);
+    }
+    
 
     int cmd_sum = 0;
     for (cmdnode* q = pipelist; q != NULL; q=q->next){
