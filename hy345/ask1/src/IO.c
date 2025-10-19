@@ -120,10 +120,11 @@ cmdnode* read_commands()
         while (strstr(commands, "fi") == NULL)
         {
             printf("> ");
-            add_commands(&head, ";\n", commands); // create a command node and add to head for each <\n> or <;>
             if (commands[n-1] == '\n'){
                 commands[n-1] = '\0'; //removing newline
             }
+            add_commands(&head, ";\n", commands); // create a command node and add to head for each <\n> or <;>
+            free(commands);
             len = 0;
             n = getline(&commands, &len, stdin);
             if(got_sigint == 1){
@@ -132,6 +133,11 @@ cmdnode* read_commands()
             }
         }
     }
+    else if (1)
+    {
+        /* code */
+    }
+    
     
 
     if(n < 1){ // EOF probably
