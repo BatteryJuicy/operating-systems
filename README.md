@@ -1,6 +1,6 @@
 # operating-systems
 assignments for HY-345 OS class
-  - [ask1](hy345/ask1)
+  - [assignment 1 - unix shell](hy345/ask1)
 
 ## Build
 
@@ -29,5 +29,6 @@ To delete the files make created run
    ```bash
    make clean
    ```
+
 
 
