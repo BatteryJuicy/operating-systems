@@ -1,10 +1,10 @@
-#include <IO.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <assert.h>
+#include <IO.h>
 
 void type_prompt()
 {
@@ -82,9 +82,13 @@ cmdnode* create_node(char* cmd)
 
 cmdnode* read_commands()
 {
+    cmdnode* head = NULL;
+    
     char *commands = NULL;
     size_t len = 0; // buffer size (gets updated by getline)
     ssize_t n = getline(&commands, &len, stdin); // reads the entire line and stores the number of chars in n
+
+    //check if/for and do a loop with getline and create cmdnodes
 
     if(n == -1){ // EOF probably
         return NULL;
@@ -92,8 +96,6 @@ cmdnode* read_commands()
     if (commands[n-1] == '\n'){
         commands[n-1] = '\0'; //removing newline
     }
-
-    cmdnode* head = NULL;
 
     char* save_strtok_ptr; //pointer to store state of strtok because the static char* gets overritten when it's called in create_node()
 

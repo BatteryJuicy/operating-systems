@@ -3,94 +3,10 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <IO.h>
 #include <vars.h>
 #include <execute.h>
-
-void preprocess_variables(cmdnode* p)
-{
-    for (int i = 0; p->argv[i] != NULL; i++)
-    {
-        int ampersand_flag = 0;
-
-        //if arg starts with $ replace the whole string with the value of the var in globals with name argv[i] + 1
-        char new_arg[1024] = {0};
-        int j = 0;
-        while (p->argv[i][j] != '\0'){
-            if (p->argv[i][j] == '$'){
-                ampersand_flag = 1;
-                const char* name = &(p->argv[i][j+1]); //start after $
-                char* value;
-
-                //replace next $ with \0 so get_var doesn't read the rest of the string
-                int EOF_flag = 1;
-                int k;
-                for (k = j+1; p->argv[i][k] != '\0'; k++)
-                {
-                    if(p->argv[i][k] == '$'){
-                        p->argv[i][k] = '\0';
-                        EOF_flag = 0;
-                        break;
-                    }
-                }
-                //check if variable is environment var else check if it's defined in this process
-                if ((value = getenv(name)) == 0)
-                    value = get_var(name);
-
-                if (!EOF_flag)
-                    p->argv[i][k] = '$'; //restore string for the next repetition
-
-                if (value != NULL)
-                    strcat(new_arg, value); // concatinate the new value
-            }
-            j++;
-        }
-        if (ampersand_flag)
-            p->argv[i] = strdup(new_arg); //replace old string with substituted version. Memory leak but don't have time to fix
-    }
-}
-
-void define_variable(cmdnode* p)
-{
-    //split cmd between =
-    const char* name = strtok((p->argv[0]), "=");
-    char* value = strtok(NULL, " ");
-    
-    char* nameptr = (char*)name;
-    if (!isalpha(*nameptr)){
-        fprintf(stderr, "%s: Invalid variable name", name);
-        return;
-    }
-    while (*(++nameptr) != '\0')
-    {
-        if (!isalpha(*nameptr) && !isdigit(*nameptr)){
-            fprintf(stderr, "%s: Invalid variable name\n", name);
-            return;
-        }
-    }
-
-    if (value != NULL)
-    {
-        if (value[0] == '\"'){
-            value = &value[1];
-
-            int i = 0;
-            while (value[i] != '\"') i++;
-            if(value[i] != '\"'){
-                fprintf(stderr, "Invalid variable delcaration\n");
-                return;
-            }
-            else{
-                value[i] = '\0';
-            }
-            
-        }
-
-        //create/overrite variable
-        set_var(name, value);
-    }
-}
+#include <controlflow.h>
 
 int check_builtin(cmdnode* p, cmdnode* command_list)
 {
@@ -132,8 +48,6 @@ int main(){
     int pipe_flag;
     while(1)
     {
-        pipe_flag = 0;
-
         type_prompt();
         
         cmdnode* command_list = read_commands(); // reads command(s) and appends each command to a SLL
@@ -141,10 +55,8 @@ int main(){
         cmdnode* p = command_list;
         while(p != NULL){
 
-            //-------------preprocess variables-------------
+            pipe_flag = 0;
 
-            preprocess_variables(p);
-            
             //-------------check for variable declaration-------------
 
             if (strchr(p->argv[0], '=') != NULL){ //if it contains =
@@ -163,6 +75,31 @@ int main(){
                 continue;
             }
 
+            //-------------check if-------------
+
+            if(strcmp(p->argv[0], "if") == 0){
+                for (int j = 0; p->argv[j] != NULL; j++)
+                {
+                    if(strstr(p->argv[j], "then") != NULL){
+                        fprintf(stderr, "IF: syntax error near unexpected token `%s'\n", p->argv[j]);
+                        exit(1);
+                    }
+                }
+                p = handle_if(p);
+                //continue to the next command.
+                //function set p to first command after if check so no p=p->next is needed
+                continue;
+            }
+            else if (strcmp(p->argv[0], "then") == 0){
+                for (int j = 0; p->argv[j] != NULL; j++) {
+                    p->argv[j] = p->argv[j+1];
+                }
+            }
+            else if (strcmp(p->argv[0], "fi") == 0){
+                p=p->next;
+                continue;
+            }
+
             //-------------execute command-------------
 
             for (int i = 0; p->argv[i] != NULL; i++)
@@ -173,8 +110,9 @@ int main(){
                     break;
                 }
             }
-            if(pipe_flag == 0)
+            if(pipe_flag == 0){
                 execute_command(p, &status);
+            }
 
             p=p->next; //process the next command
         }

@@ -7,6 +7,50 @@
 #include <string.h>
 #include <execute.h>
 #include <IO.h>
+#include <vars.h>
+
+void preprocess_variables(cmdnode* p)
+{
+    for (int i = 0; p->argv[i] != NULL; i++)
+    {
+        int ampersand_flag = 0;
+
+        //if arg starts with $ replace the whole string with the value of the var in globals with name argv[i] + 1
+        char new_arg[1024] = {0};
+        int j = 0;
+        while (p->argv[i][j] != '\0'){
+            if (p->argv[i][j] == '$'){
+                ampersand_flag = 1;
+                const char* name = &(p->argv[i][j+1]); //start after $
+                char* value;
+
+                //replace next $ with \0 so get_var doesn't read the rest of the string
+                int EOF_flag = 1;
+                int k;
+                for (k = j+1; p->argv[i][k] != '\0'; k++)
+                {
+                    if(p->argv[i][k] == '$'){
+                        p->argv[i][k] = '\0';
+                        EOF_flag = 0;
+                        break;
+                    }
+                }
+                //check if variable is environment var else check if it's defined in this process
+                if ((value = getenv(name)) == 0)
+                    value = get_var(name);
+
+                if (!EOF_flag)
+                    p->argv[i][k] = '$'; //restore string for the next repetition
+
+                if (value != NULL)
+                    strcat(new_arg, value); // concatinate the new value
+            }
+            j++;
+        }
+        if (ampersand_flag)
+            p->argv[i] = strdup(new_arg); //replace old string with substituted version. Memory leak but don't have time to fix
+    }
+}
 
 void execute_command(cmdnode* p, int* status)
 {
@@ -21,6 +65,8 @@ void execute_command(cmdnode* p, int* status)
 
         //check for I/O redirection
         redirect_io(p);
+
+        preprocess_variables(p);
 
         execvp((p->argv)[0], p->argv);
 
@@ -66,6 +112,8 @@ cmdnode* reprocess_commands(cmdnode* p)
 void execute_pipeline(cmdnode* p)
 {
     cmdnode* pipelist = reprocess_commands(p); // adding the pipeline commands to the list (each node is 1 command)
+
+    preprocess_variables(p);
 
     int cmd_sum = 0;
     for (cmdnode* q = pipelist; q != NULL; q=q->next){
