@@ -78,6 +78,10 @@ int main(){
             //-------------check if-------------
 
             if(strcmp(p->argv[0], "if") == 0){
+                if (p->next != NULL && strcmp(p->next->argv[0], "then") != 0){ //if next line/command is not then
+                    fprintf(stderr, "IF: syntax error near unexpected token `%s'\n", p->next->argv[0]);
+                    exit(1);
+                }
                 for (int j = 0; p->argv[j] != NULL; j++)
                 {
                     if(strstr(p->argv[j], "then") != NULL){

@@ -2,9 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include <pwd.h>
 #include <assert.h>
 #include <IO.h>
+
+volatile sig_atomic_t got_sigint = 0;
+
+void handler(int sig){
+    got_sigint = 1;
+}
 
 void type_prompt()
 {
@@ -54,7 +61,7 @@ char** split_command(char* command)
         exit(1);
     }
 
-    while (*command == ' ') command++; // skipping spaces
+    while (*command == ' ' || *command == '\t') command++; // skipping spaces and tabs
     int argc = 0;
     char *arg = strtok(command, " ");
     while (arg != NULL && argc < MAX_ARG_SIZE) {
@@ -80,6 +87,24 @@ cmdnode* create_node(char* cmd)
     return new_node;
 }
 
+void add_commands(cmdnode** head, char* delim, char *cmd)
+{
+    char* save_strtok_ptr; //pointer to store state of strtok because the static char* gets overritten when it's called in create_node()
+
+    char* token = strtok_r(cmd, delim, &save_strtok_ptr); // splitting commands before each ";"
+    while (token != NULL)
+    {
+        char* cmd_copy = strdup(token);
+        if(cmd_copy == NULL){
+            fprintf(stderr, "Couldn't allocate cmd.\n");
+            exit(1);
+        }
+        cmdnode* command_node =  create_node(cmd_copy);
+        append(head, command_node); //creating a node with cmd as data and appending it to the list of commands
+        token = strtok_r(NULL, delim, &save_strtok_ptr); // go to the next command and do the same
+    }
+}
+
 cmdnode* read_commands()
 {
     cmdnode* head = NULL;
@@ -88,30 +113,36 @@ cmdnode* read_commands()
     size_t len = 0; // buffer size (gets updated by getline)
     ssize_t n = getline(&commands, &len, stdin); // reads the entire line and stores the number of chars in n
 
-    //check if/for and do a loop with getline and create cmdnodes
+    if (strstr(commands, "if") != NULL)
+    {
+        signal(SIGINT, handler);
 
-    if(n == -1){ // EOF probably
+        while (strstr(commands, "fi") == NULL)
+        {
+            printf("> ");
+            add_commands(&head, ";\n", commands); // create a command node and add to head for each <\n> or <;>
+            if (commands[n-1] == '\n'){
+                commands[n-1] = '\0'; //removing newline
+            }
+            len = 0;
+            n = getline(&commands, &len, stdin);
+            if(got_sigint == 1){
+                free(commands);
+                return NULL;
+            }
+        }
+    }
+    
+
+    if(n < 1){ // EOF probably
         return NULL;
     }
     if (commands[n-1] == '\n'){
         commands[n-1] = '\0'; //removing newline
     }
-
-    char* save_strtok_ptr; //pointer to store state of strtok because the static char* gets overritten when it's called in create_node()
-
-    char* cmd = strtok_r(commands, ";", &save_strtok_ptr); // splitting commands before each ";"
-    while (cmd != NULL)
-    {
-        char* cmd_copy = strdup(cmd);
-        if(cmd_copy == NULL){
-            fprintf(stderr, "Couldn't allocate cmd.\n");
-            exit(1);
-        }
-        cmdnode* command_node =  create_node(cmd_copy);
-        append(&head, command_node); //creating a node with cmd as data and appending it to the list of commands
-        cmd = strtok_r(NULL, ";", &save_strtok_ptr); // go to the next command and do the same
-    }
     
+    add_commands(&head, ";", commands);
+
     free(commands);
 
     return head;
