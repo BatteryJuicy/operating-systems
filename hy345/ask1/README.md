@@ -14,4 +14,5 @@ At the end of the command parsing it frees the cmd linked list before repeating 
 
 ### Notes
   - Command preproccessing creates a memory leak if the variables are **not** seperated by spaces (e.g. $a$b)
-  - The shell **ignores ctrl+c** in the parent process. To exit type **exit**
+  - The shell **ignores ctrl+c** in the parent process. To exit type ```exit```
+
