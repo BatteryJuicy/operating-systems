@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <vars.h>
 #include <IO.h>
 
@@ -113,5 +114,47 @@ void free_table()
             free(p);
             p=globals[i]; //setting p to the old second now first node of the SLL
         }
+    }
+}
+
+void define_variable(cmdnode* p)
+{
+    //split cmd between =
+    const char* name = strtok((p->argv[0]), "=");
+    char* value = strtok(NULL, " ");
+    
+    char* nameptr = (char*)name;
+    if (!isalpha(*nameptr)){
+        fprintf(stderr, "%s: Invalid variable name", name);
+        return;
+    }
+    while (*(++nameptr) != '\0')
+    {
+        if (!isalpha(*nameptr) && !isdigit(*nameptr)){
+            fprintf(stderr, "%s: Invalid variable name\n", name);
+            return;
+        }
+    }
+
+    if (value != NULL)
+    {
+        //handle double quote declaration
+        if (value[0] == '\"'){
+            value = &value[1];
+
+            int i = 0;
+            while (value[i] != '\"') i++;
+            if(value[i] != '\"'){
+                fprintf(stderr, "Invalid variable delcaration\n");
+                return;
+            }
+            else{
+                value[i] = '\0';
+            }
+            
+        }
+
+        //create/overrite variable
+        set_var(name, value);
     }
 }

@@ -3,6 +3,8 @@
     TO IMPLEMENT GLOBAL VARIABLES. EACH VAR ALLOCATES NAME AND VALUE.
 */
 
+#include <IO.h>
+
 #ifndef VARS_H
 #define VARS_H
 
@@ -23,5 +25,7 @@ char* get_var(const char *name);
 // removed var from SLL
 void delete_var(const char *name);
 void free_table();
+
+void define_variable(cmdnode* p);
 
 #endif
