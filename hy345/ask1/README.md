@@ -3,7 +3,7 @@ This shell reads multiple commands and stores each command (seperated by <;>) in
   - A string of the whole command with null terminators between each argument/flag
   - an array of char* to each string above
 For each command:
-  - It looks for <=> to **define a variable**.
+  - It looks for <=> to **define a variable** using a global hashtable.
   - Checks and **executes built-in** command (cd, exit, export).
   - It **preproccesses** the command just before executing the command to dereference variables if <$>.
   - If it's a **pipeline** (contains |), then it creates a _new_ linked list to seperate each command along <|>.
@@ -16,5 +16,6 @@ At the end of the command parsing it frees the cmd linked list before repeating 
 ### Notes
   - Command preproccessing creates a memory leak if the variables are **not** seperated by spaces (e.g. $a$b)
   - The shell **ignores ctrl+c** in the parent process. To exit type ```exit```
+
 
 
