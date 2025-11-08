@@ -113,11 +113,13 @@ cmdnode* read_commands()
     size_t len = 0; // buffer size (gets updated by getline)
     ssize_t n = getline(&commands, &len, stdin); // reads the entire line and stores the number of chars in n
 
-    if (strstr(commands, "if") != NULL)
+    char temp[3];
+    strncpy(temp, commands, 2);
+    if (strcmp(temp, "if") == 0)
     {
         signal(SIGINT, handler);
 
-        while (strstr(commands, "fi") == NULL)
+        while (strcmp(commands, "fi\n") != 0 && strstr(commands, "fi ") == NULL)
         {
             printf("> ");
             if (commands[n-1] == '\n'){
@@ -128,15 +130,33 @@ cmdnode* read_commands()
             len = 0;
             n = getline(&commands, &len, stdin);
             if(got_sigint == 1){
+                got_sigint = 0;
                 free(commands);
                 return NULL;
             }
         }
     }
-    else if (1)
-    {
-        /* code */
-    }
+    // else if (strstr(commands, "for") != NULL)
+    // {
+    //     signal(SIGINT, handler);
+
+    //     while (strstr(commands, "done") == NULL)
+    //     {
+    //         printf("> ");
+    //         if (commands[n-1] == '\n'){
+    //             commands[n-1] = '\0'; //removing newline
+    //         }
+    //         add_commands(&head, ";\n", commands); // create a command node and add to head for each <\n> or <;>
+    //         free(commands);
+    //         len = 0;
+    //         n = getline(&commands, &len, stdin);
+    //         if(got_sigint == 1){
+    //             got_sigint = 0;
+    //             free(commands);
+    //             return NULL;
+    //         }
+    //     }
+    // }
     
     
 

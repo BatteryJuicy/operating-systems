@@ -1,3 +1,8 @@
+/*
+    Full Name: Andreas Ektoras Thanopoulos
+    AM: 5401
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -46,8 +51,20 @@ int main(){
     
     int status;
     int pipe_flag;
+    int for_flag;
+    const char* iterator_name;
+    char** iterator_val = calloc(MAX_FOR_ARGS, sizeof(char*));
+    int iterator_val_index;
+    cmdnode* beginning_for;
     while(1)
     {
+        for_flag = 0;
+        iterator_val_index = 0;
+        beginning_for = NULL;
+        for (int i = 0; i < MAX_FOR_ARGS; i++)
+            iterator_val[i] = NULL;
+        
+
         type_prompt();
         
         cmdnode* command_list = read_commands(); // reads command(s) and appends each command to a SLL
@@ -98,8 +115,44 @@ int main(){
                 for (int j = 0; p->argv[j] != NULL; j++) {
                     p->argv[j] = p->argv[j+1];
                 }
+                printf("then: %s", p->argv[0]);
+                continue;
             }
             else if (strcmp(p->argv[0], "fi") == 0){
+                p=p->next;
+                continue;
+            }
+
+            //-------------check for-------------
+
+            if (strcmp(p->argv[0], "for") == 0){
+                for_flag = 1;
+                handle_for(p, &iterator_val, &iterator_name);
+
+                beginning_for = p->next;
+                p = p->next;
+                continue;
+            }
+            else if (strcmp(p->argv[0], "do") == 0){
+                for (int j = 0; p->argv[j] != NULL; j++) {
+                    p->argv[j] = p->argv[j+1];
+                }
+                printf("do: %s", p->argv[0]);
+                continue;
+            }
+            else if (for_flag == 1){
+                if (strcmp(p->argv[0], "done") == 0){
+                    iterator_val_index++;
+                    if(iterator_val[iterator_val_index] != NULL){
+                        set_var(iterator_name, iterator_val[iterator_val_index]);
+                        p=beginning_for;
+                    }
+                }
+            }
+            if (iterator_val[iterator_val_index] == NULL){
+                iterator_val_index = 0;
+                for_flag = 0;
+                printf("-%s\n", p->line);
                 p=p->next;
                 continue;
             }

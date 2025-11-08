@@ -22,10 +22,13 @@ extern var* globals[TABLE_SIZE];
 void set_var(const char *name, char *value);
 // return pointer to value of var if name is invalid returns NULL
 char* get_var(const char *name);
+//returns pointer to the var. if name is invalid returns null
+var* get_var_ref(const char *name);
 // removed var from SLL
 void delete_var(const char *name);
 void free_table();
 
+char* remove_double_quotes(char * value);
 void define_variable(cmdnode* p);
 
 #endif

@@ -34,6 +34,18 @@ var* create_var(const char *name, char *value)
 
 void set_var(const char *name, char *value)
 {
+    if (name == NULL && value == NULL){
+        fprintf(stderr, "Var definition: (null) name and value\n");
+        return;
+    }
+    if (name == NULL) {
+        fprintf(stderr, "Var definition: (null) name\n");
+        return;
+    }
+    if (value == NULL){
+        fprintf(stderr, "Var definition: (null) value\n");
+        return;
+    }
     unsigned long index = hash(name)%TABLE_SIZE;
 
     //if not empty check if variabe is already declared and overrite previous value
@@ -68,6 +80,21 @@ char* get_var(const char *name)
     if(result == NULL)
         return NULL;
     return result->value;
+}
+
+var* get_var_ref(const char *name)
+{
+    unsigned long index = hash(name)%TABLE_SIZE;
+    
+    var* result = globals[index];
+
+    while (result != NULL && strcmp(result->name, name) != 0) 
+    {
+        result = result->next;
+    }
+    if(result == NULL)
+        return NULL;
+    return result;
 }
 
 void delete_var(const char *name)
@@ -117,6 +144,25 @@ void free_table()
     }
 }
 
+char* remove_double_quotes(char * value)
+{
+    if (value[0] == '\"'){
+        value = &value[1];
+
+        int i = 0;
+        while (value[i] != '\"') i++;
+        if(value[i] != '\"'){
+            fprintf(stderr, "Invalid variable delcaration\n");
+            exit(1);
+        }
+        else{
+            value[i] = '\0';
+        }
+        
+    }
+    return value;
+}
+
 void define_variable(cmdnode* p)
 {
     //split cmd between =
@@ -138,21 +184,7 @@ void define_variable(cmdnode* p)
 
     if (value != NULL)
     {
-        //handle double quote declaration
-        if (value[0] == '\"'){
-            value = &value[1];
-
-            int i = 0;
-            while (value[i] != '\"') i++;
-            if(value[i] != '\"'){
-                fprintf(stderr, "Invalid variable delcaration\n");
-                return;
-            }
-            else{
-                value[i] = '\0';
-            }
-            
-        }
+        value = remove_double_quotes(value);
 
         //create/overrite variable
         set_var(name, value);

@@ -3,6 +3,8 @@
 #include <string.h>
 #include <IO.h>
 #include <execute.h>
+#include <vars.h>
+#include <controlflow.h>
 
 typedef enum {
     EXPR_FALSE = 0,
@@ -59,7 +61,7 @@ cmdnode* handle_if(cmdnode* p)
         {
             for (int i = 0; p->argv[i]; i++)
             {
-                if (strstr(p->argv[i], "fi") != NULL){
+                if (strcmp(p->argv[i], "fi") == 0){
                     return p->next;
                 }
             }
@@ -79,4 +81,26 @@ cmdnode* handle_if(cmdnode* p)
     }
     return p->next; //oneline if
 
+}
+
+void handle_for(cmdnode* p, char*** arrayptr, const char** iterator_name)
+{
+    const char *name = p->argv[1];
+    *iterator_name = name;
+    char* value = NULL;
+    if (p->argv[2] != NULL && strcmp(p->argv[2], "in") == 0){
+        value = p->argv[3];
+        
+        value = remove_double_quotes(value);
+
+        (*arrayptr)[0] = value;
+    }
+    set_var(name, value);
+    for (int i = 1; i < MAX_FOR_ARGS; i++)
+    {
+        value = p->argv[3+i];
+        if(p->argv[3+i] == NULL)break;
+        value = remove_double_quotes(value);
+        (*arrayptr)[i] = value;
+    }    
 }
