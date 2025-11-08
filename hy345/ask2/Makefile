@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Wshadow -Wconversion -Wuninitialized -O2
-TARGET = hy345sh.out
+TARGET = restaurant
 
 SRC_DIR = src
 INC_DIR = include
