@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Wshadow -Wconversion -Wuninitialized -O2
-TARGET = restaurant
+TARGET = restaurant.out
 
 SRC_DIR = src
 INC_DIR = include
