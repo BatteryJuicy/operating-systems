@@ -5,30 +5,40 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <restaurant.h>
+#include <pthread.h>
 
-static int _N, _G, _X;
-const int *const N = &_N; //Nubmer of Tables
-const int *const G = &_G; //Number of Groups
-const int *const X = &_X; //Capacity of each Table and cap of Group Size
+int N; //Nubmer of Tables
+int G; //Number of Groups
+int X; //Capacity of each Table and cap of Group Size
+
+Table *tables; //table array
+Group *groups; //group queue
+int groups_top = 0;
+
+pthread_mutex_t mutex;
+sem_t waiter_sem;
 
 int main(int argc, char* argv[])
 {
-    if (argc != 4)
+    init_restaurant(argc, argv);
+
+    pthread_t waiter;
+    pthread_t group_threads[G];
+
+    pthread_create(&waiter, NULL, waiter_thread, NULL); // create the waiter thread.
+    for (int i = 0; i < G; i++)
     {
-        fprintf(stderr, "Invalid number of parameters.\n");
-        return 1;
+        pthread_create(&group_threads[i], NULL, group_thread, &groups[i]); //create group threads and pass a pointer to each group that corresponds to the thread.
     }
-
-    _N = atoi(argv[1]);
-    _G = atoi(argv[2]);
-    _X = atoi(argv[3]);
-
-    if (*N < 1 || *G < 1 || *X < 1)
+    
+    // wait for all threads to finish
+    for (int i = 0; i < G; i++)
     {
-        fprintf(stderr, "Invalid Parameter types or values.\n");
-        return 1;
+        pthread_join(group_threads[i], NULL);
     }
-    printf(":%d, %d, %d:\n", *N, *G, *X);
+    pthread_join(waiter, NULL);
 
+    cleanup_restaurant();
     return 0;
 }
