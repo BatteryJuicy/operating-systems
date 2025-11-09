@@ -17,7 +17,7 @@ typedef struct
     int gid;
     int size;
     bool seated;
-    unsigned int time_waiting;
+    bool arrived;
     int table_assigned;
     sem_t sem;
 } Group;

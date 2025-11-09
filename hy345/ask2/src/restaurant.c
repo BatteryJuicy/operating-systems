@@ -22,7 +22,7 @@ sem_t waiter_sem;
 
 void init_restaurant(int argc, char* argv[])
 {
-    srand(time(NULL)); //seed the RNG.
+    srand((unsigned int)time(NULL)); //seed the RNG.
 
     //initialize program arguments and check values.
     if (argc != 4)
@@ -51,11 +51,11 @@ void init_restaurant(int argc, char* argv[])
         tables[i].seats_taken = 0;
     }
     groups = calloc((size_t)G, sizeof(Group));
-    for (int i = 0; i < N; i++)
+    for (int i = 0; i < G; i++)
     {
         groups[i].gid = i;
         groups[i].seated = false;
-        groups[i].time_waiting = 0;
+        groups[i].arrived = false;
         sem_init(&groups[i].sem, 0, 0);
     }
 
@@ -74,29 +74,34 @@ void* group_thread(void* arg)
     g->size = rand()%(X - 0) + 1; //size from [1, X)
 
     pthread_mutex_lock(&mutex);
-    printf("[GROUP %d] Arrived with %d people (after %d sec)", g->gid, g->size, arrival_delay);
+    g->arrived = true;
+    printf("[GROUP %d] Arrived with %d people (after %d sec)\n", g->gid, g->size, arrival_delay);
     pthread_mutex_unlock(&mutex);
 
-    //signal the waiter
+    //signal the waiter that the group arrived
     sem_post(&waiter_sem);
 
     //wait for waiter's acknowledgment that a table is ready
     sem_wait(&g->sem);
 
     pthread_mutex_lock(&mutex);
-    g->seated = true;
-    printf("[GROUP %d] Seated at Table %d with %d people", g->gid, g->table_assigned, g->size);
-    
-    //sleep for [EATING_TIME_MAX, EATING_TIME_MIN) time.
-    unsigned int eating_time = (unsigned int)rand()%(EATING_TIME_MAX - EATING_TIME_MIN) + EATING_TIME_MIN;
-    printf("[GROUP %d] Eating (%d people) for %d seconds...", g->gid, g->size, eating_time);
+    printf("[GROUP %d] Seated at Table %d with %d people\n", g->gid, g->table_assigned, g->size);
     pthread_mutex_unlock(&mutex);
+
+    unsigned int eating_time = (unsigned int)rand()%(EATING_TIME_MAX - EATING_TIME_MIN) + EATING_TIME_MIN;
+
+    pthread_mutex_lock(&mutex);
+    printf("[GROUP %d] Eating (%d people) for %d seconds...\n", g->gid, g->size, eating_time);
+    pthread_mutex_unlock(&mutex);
+    
+    //sleep for [EATING_TIME_MIN, EATING_TIME_MAX) time.
     sleep(eating_time);
 
     pthread_mutex_lock(&mutex);
     tables[g->table_assigned].seats_taken -= g->size;
-    printf("[GROUP %d] Left Table %d (%d/%d occupied)",
-            g->gid, g->table_assigned,
+    printf("[GROUP %d] Left Table %d (%d/%d occupied)\n",
+            g->gid,
+            g->table_assigned,
             tables[g->table_assigned].seats_taken,
             tables[g->table_assigned].capacity);
     
@@ -107,7 +112,7 @@ void* group_thread(void* arg)
     return NULL;
 }
 
-void* waiter_thread(void* arg)
+void* waiter_thread(void*)
 {
     while(true)
     {
@@ -117,7 +122,58 @@ void* waiter_thread(void* arg)
             pthread_mutex_unlock(&mutex);
             break;
         }
+        pthread_mutex_unlock(&mutex);
 
+        sem_wait(&waiter_sem); // wait for a group to arrive or leave
 
+        pthread_mutex_lock(&mutex);
+        //for each group check if it's not seated and accomodate them or ignore them
+        for (int i = 0; i < G; i++)
+        {
+            Group* g = &groups[i];
+
+            if (g->seated == true) continue;
+            if (g->arrived == false)continue;
+
+            //for each table check if the group can be seated and seat them.
+            for (int j = 0; j < N; j++)
+            {
+                Table* t = &tables[j];
+
+                if (t->capacity - t->seats_taken >= g->size){
+                    //seat the group
+                    t->seats_taken += g->size;
+                    g->seated = true;
+                    g->table_assigned = t->tid;
+                    printf("[WAITER] Assigned group %d (size=%d) to Table %d (%d/%d occupied)\n",
+                            g->gid,
+                            g->size,
+                            t->tid,
+                            t->seats_taken,
+                            t->capacity);
+                    //signal the group that they have been seated.
+                    sem_post(&g->sem);
+                    //break to check the next group.
+                    break;
+                }
+            }
+        }
+        pthread_mutex_unlock(&mutex); //unlock the mutex to allow the group threads to work.
     }
+
+    //no mutex lock needed since this get's executed when all group threads have been closed.
+    printf("All groups have left. Closing restaurant.\n");
+    return NULL;
+}
+
+void cleanup_restaurant()
+{
+    pthread_mutex_destroy(&mutex);
+    sem_destroy(&waiter_sem);
+    for (int i = 0; i < G; i++)
+    {
+        sem_destroy(&groups[i].sem);
+    }
+    free(groups);
+    free(tables);    
 }
