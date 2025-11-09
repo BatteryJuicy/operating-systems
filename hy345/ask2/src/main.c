@@ -8,17 +8,6 @@
 #include <restaurant.h>
 #include <pthread.h>
 
-int N; //Nubmer of Tables
-int G; //Number of Groups
-int X; //Capacity of each Table and cap of Group Size
-
-Table *tables; //table array
-Group *groups; //group queue
-int groups_top = 0;
-
-pthread_mutex_t mutex;
-sem_t waiter_sem;
-
 int main(int argc, char* argv[])
 {
     init_restaurant(argc, argv);

@@ -9,7 +9,7 @@ typedef struct
 {
     int tid;
     int capacity;
-    bool occupied;
+    int seats_taken;
 } Table;
 
 typedef struct
@@ -17,6 +17,7 @@ typedef struct
     int gid;
     int size;
     bool seated;
+    unsigned int time_waiting;
     int table_assigned;
     sem_t sem;
 } Group;
@@ -28,7 +29,7 @@ extern int X;
 
 extern Table *tables;
 extern Group *groups;
-extern int groups_top;
+extern int groups_done;
 
 extern pthread_mutex_t mutex;
 extern sem_t waiter_sem;
