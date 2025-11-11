@@ -1,7 +1,7 @@
 # Restaurant Simulation
 
 ### Overview
-This program simualtes a restaurant using **POSIX threads** and **semaphores**.
+This program simulates a restaurant using **POSIX threads** and **semaphores**.
 
 ---
 
