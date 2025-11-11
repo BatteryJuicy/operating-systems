@@ -1,6 +1,7 @@
 # operating-systems
-assignments for HY-345 OS class
-  - [assignment 1 - unix shell](hy345/ask1)
+Assignments for HY-345 OS class
+  - [Assignment 1 - Linux Shell](hy345/ask1)
+  - [Assignment 2 - Thread Synchronization](hy345/ask2)
 
 ## Build
 
@@ -20,15 +21,20 @@ To build and run each assignment:
 
 4. Run the command
     ```bash
+    ./<executable name>
+    ```
+    For example in assignment 1:
+    ```bash
     ./hy345sh.out
     ```
-    or double click the executable on the folder.
+    or double click the executable on the folder (Although in some cases the program could immidiately terminate after it's finished so this is not recomended).
 
 ### Optional
 To delete the files make created run
    ```bash
    make clean
    ```
+
 
 
 
