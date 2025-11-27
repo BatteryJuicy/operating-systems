@@ -347,8 +347,8 @@
 #define __NR_fanotify_mark	339
 #define __NR_prlimit64		340
 
-#define NR_set_proc_info 341
-#define NR_get_proc_info 342
+#define __NR_set_proc_info 341
+#define __NR_get_proc_info 342
 
 #ifdef __KERNEL__
 

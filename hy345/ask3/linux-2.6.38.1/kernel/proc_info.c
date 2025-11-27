@@ -9,7 +9,7 @@
 This system call returns 0 if the process information has been stored
 successfully, or it will return EINVAL in case of an error.
 */
-asmlinkage int sys_set_proc_info(int deadline, int est_runtime)
+asmlinkage long sys_set_proc_info(int deadline, int est_runtime)
 {
     struct task_struct *t = current;
 
@@ -33,7 +33,7 @@ asmlinkage int sys_set_proc_info(int deadline, int est_runtime)
 This system call returns 0 if the process information has been stored
 successfully, or it will return EINVAL in case of an error.
 */
-asmlinkage int sys_get_proc_info(struct d_params *params)
+asmlinkage long sys_get_proc_info(struct d_params *params)
 {
     struct task_struct *caller_task = current;
     struct d_params kernel_params;
