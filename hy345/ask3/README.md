@@ -1,61 +1,85 @@
-## Files modified:
+## Modified Files
 
-### 1. include/linux/sched.h
+### 1. `include/linux/sched.h`
 
-Added an int deadline and an int est_runtime attribute to the task_struct.
+Two new fields were added to the `task_struct`:
+- `int deadline`
+- `int est_runtime`
 
-### 2. include/asm-generic/syscalls.h
+These fields store process-specific scheduling parameters required by the implemented policy.
 
-Added the declarations of the custom syscalls.
+---
 
-### 3. arch/x86/include/asm/unistd_32.h
+### 2. `include/asm-generic/syscalls.h`
 
-Defined the 2 sycall invocation number and update the total number of syscalls.
+Declarations for the two custom system calls were added, enabling their visibility across the kernel.
 
-### 4. arch/x86/kernel/syscall_table_32.S
+---
 
-Added a pointer for each new syscall so the kernel can find them.
+### 3. `arch/x86/include/asm/unistd_32.h`
 
-### 6. kernel/Makefile
+The syscall invocation numbers for the two new system calls were defined, and the total number of system calls was updated accordingly.
 
-Added the object file of the source code for the 2 syscalls so it gets
-compiled and linked.
-    
-### 7. include/linux/d_params.h
+---
 
-Defined the d_params struct that allows communication between the 2 
-syscalls.
+### 4. `arch/x86/kernel/syscall_table_32.S`
 
-## Files created:
+Entries for the newly implemented system calls were added to the syscall table, allowing the kernel to correctly dispatch them.
 
-### 1. kernel/proc_info.c
+---
 
-Implements the custom syscalls.
+### 5. `kernel/Makefile`
 
-i) sys_set_proc_info(int deadline, int est_runtime)
-    
-    It gets a pointer to the caller, prints my info and the function name, 
-    checks that the parameters satisfy that they are potitive and changes the 
-    values of the task_struct of the caller.
+The object file corresponding to the new syscall implementation was added to the build system so that it is compiled and linked into the kernel.
 
-ii) sys_get_proc_info(struct d_params *params)
-    
-    It gets a pointer to the caller, prints my info and the function name, 
-    creates temporary d_params struct, checks that the parameter was  passed 
-    correctly from user to kernel space and modifies its values using the 
-    temp d_params struct and the caller's task_struct.
+---
 
-### 2. execution/test.c
+### 6. `include/linux/d_params.h`
 
-Tests that the syscalls handle all edge cases. Also defines wrapper 
-functions for the 2 syscalls.
+The `d_params` structure was defined to facilitate communication between the two system calls.
 
-### 3. execution/makefile
+---
 
-A simple makefile to compile and clean the test.c nothing worth mentioning.
+## Created Files
 
-## Note:
+### 1. `kernel/proc_info.c`
 
-    struct d_params only exists in the kernel space. To use the 2 new syscalls 
-    the user must define an identical struct in his implementation.
+This file contains the implementation of the two custom system calls.
 
+#### i) `sys_set_proc_info(int deadline, int est_runtime)`
+
+This system call:
+- Obtains a pointer to the calling process’s `task_struct`,
+- Prints diagnostic information, including the function name,
+- Verifies that both parameters are strictly positive,
+- Updates the corresponding fields in the caller’s `task_struct`.
+
+#### ii) `sys_get_proc_info(struct d_params *params)`
+
+This system call:
+- Obtains a pointer to the calling process’s `task_struct`,
+- Prints diagnostic information, including the function name,
+- Creates a temporary `d_params` structure in kernel space,
+- Verifies that the user-space pointer was passed correctly,
+- Copies the relevant values from the caller’s `task_struct` into the temporary structure and returns them to user space.
+
+---
+
+### 2. `execution/test.c`
+
+A user-space test program that:
+- Defines wrapper functions for the two system calls,
+- Verifies correct behavior under normal conditions,
+- Tests edge cases and invalid inputs to ensure robust error handling.
+
+---
+
+### 3. `execution/Makefile`
+
+A minimal Makefile used to compile and clean the `test.c` program.
+
+---
+
+## Note
+
+The `d_params` structure exists exclusively in kernel space. Consequently, any user-space program that invokes the new system calls must define an identical structure to ensure correct data exchange between user space and kernel space.
