@@ -2,6 +2,8 @@
 Assignments for HY-345 OS class
   - [Assignment 1 - Linux Shell](hy345/ask1)
   - [Assignment 2 - Thread Synchronization](hy345/ask2)
+  - [Assignment 3 - Task Struct Extension](hy345/ask3)
+  - [Assignment 4 - Linux Scheduler Extension](hy345/ask4)
 
 ## Build
 
@@ -34,6 +36,7 @@ To delete the files make created run
    ```bash
    make clean
    ```
+
 
 
 
