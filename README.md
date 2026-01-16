@@ -36,6 +36,10 @@ To delete the files make created run
    ```bash
    make clean
    ```
+### Note
+
+1. Assignments 3 and 4 don't have the complete linux kernel source code, only my additions so they can't be compiled
+2. Assignment 4 may or may not work it hasn't been tested.
 
 
 
